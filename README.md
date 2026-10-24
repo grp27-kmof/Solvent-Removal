@@ -9,10 +9,11 @@ The script supports **parallel processing** using Python's `ProcessPoolExecutor`
 - Processes multiple MOF CIF files in parallel.
 - Removes guest molecules using `mofstructure`.
 - Saves the cleaned structures as CIF files using ASE.
+- Allows the number of parallel workers to be configured.
 
 ## Requirements
 
-- Python 3.10 (recommended starting point; use a version compatible with the installed dependencies).
+- Python 3.10
 - Conda or Miniconda.
 - MOF CIF input files.
 
@@ -25,6 +26,7 @@ cd Solvent-Removal
 
 ## 2. Create a Conda Environment
 
+Create a dedicated Conda environment for the project:
 
 ```bash
 conda create -n kmof-solvent python=3.10 -y
@@ -45,7 +47,7 @@ Create two directories for the CIF files:
 - `input/` — contains the original MOF CIF files.
 - `output/` — stores the solvent-removed CIF files.
 
-Create the directories from the repository root:
+Run the following command from the repository root:
 
 ```bash
 mkdir -p input output
@@ -53,16 +55,18 @@ mkdir -p input output
 
 Place your input `.cif` files inside the `input/` directory.
 
-The script writes the processed files to `output/`. 
+The script saves the processed files to the `output/` directory.
 
-## 5. Configure the Input and Output Paths
+## 5. Configure Input and Output Paths
 
-Open `main.py` and update the following lines to match your system:
+Open `main.py` and update the paths to match your system:
 
 ```python
 input_dir = Path(r"/path/to/your/input")
 output_dir = Path(r"/path/to/your/output")
 ```
+
+**Important:** Ensure that `input_dir` points to the directory containing your CIF files and `output_dir` points to the desired output location.
 
 ## 6. Install Dependencies
 
@@ -75,7 +79,7 @@ python -m pip install -r requirements.txt
 
 ## 7. Configure Parallel Execution
 
-The script uses Python's `ProcessPoolExecutor` to process several CIF files simultaneously.
+The script uses Python's `ProcessPoolExecutor` to process multiple CIF files concurrently.
 
 In `main.py`, locate:
 
@@ -83,15 +87,15 @@ In `main.py`, locate:
 MAX_WORKERS = 25
 ```
 
-`MAX_WORKERS` specifies the maximum number of worker processes that can process CIF files concurrently.
+`MAX_WORKERS` specifies the maximum number of worker processes that can run concurrently. The actual number of active workers is also limited by the number of available CIF files.
 
-This project was run on a **32-core workstation**, using 25 workers to perform parallel solvent removal.
+This project was run on a **32-core workstation using 25 workers**.
 
-You should adjust the number of workers according to the CPU cores and available RAM on your system.
+Adjust the worker count according to your system's CPU resources and available RAM. More workers do not always result in faster execution, particularly when memory usage becomes a bottleneck.
 
 ## 8. Run the Script
 
-After configuring the paths and worker count, execute:
+After configuring the paths and worker count, run:
 
 ```bash
 python main.py
@@ -99,14 +103,14 @@ python main.py
 
 The script will:
 
-1. Find all `.cif` files in the input directory.
-2. Submit each CIF file to the process pool.
+1. Find all `.cif` files directly inside the input directory.
+2. Submit the files to the process pool.
 3. Load each structure using `mofstructure`.
 4. Remove guest molecules.
 5. Write the cleaned structure to the output directory.
 6. Print the result or any processing error for each file.
 
-Example terminal output:
+Example terminal output (illustrative):
 
 ```text
 Found 1000 CIF files. Processing with 25 workers...
@@ -118,9 +122,35 @@ Found 1000 CIF files. Processing with 25 workers...
 All CIF files processed!
 ```
 
+The number of CIF files and worker processes will depend on your input and configuration.
+
+**Note:** The final completion message does not guarantee that every CIF file was processed successfully. Check the per-file messages for errors.
+
+## 9. Input and Output Structure
+
+Example input directory:
+
+```text
+input/
+├── MOF_001.cif
+├── MOF_002.cif
+└── MOF_003.cif
+```
+
+Example output directory:
+
+```text
+output/
+├── MOF_001.cif
+├── MOF_002.cif
+└── MOF_003.cif
+```
+
+Output filenames retain the corresponding input filenames. Existing output files with matching names may be overwritten.
+
 ## Acknowledgements
 
 This project uses:
 
 - [`mofstructure`](https://github.com/bafgreat/mofstructure) for MOF structure handling and guest removal.
-- [Atomic Simulation Environment (ASE)](https://wiki.fysik.dtu.dk/ase/) for reading and writing atomistic structures.
+- [Atomic Simulation Environment (ASE)](https://wiki.fysik.dtu.dk/ase/) for writing atomistic structures.
